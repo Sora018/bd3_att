@@ -1,0 +1,34 @@
+variables:
+  KUBE_CONTEXT: wagnermarques/eteczlcatracasfrontend:aks-eteczlcatracasfrontend
+
+stages:
+  - build
+  - deploy
+
+build_ngink_container:
+  tags:
+    - gitlabrunnercontainer
+  stage: build
+  script:
+    - echo $PATH
+    - echo $USER
+    - id
+    - echo $CI_REGISTRY_USER
+    - echo $CI_REGISTRY_PASSWORD
+    - echo $CI_REGISTRY
+    - docker -v
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $CI_REGISTRY/wagnermarques/eteczlcatracasfrontend/nginx-eteczlcatracasfrontend:v1 .
+    - docker push $CI_REGISTRY/wagnermarques/eteczlcatracasfrontend/nginx-eteczlcatracasfrontend:v1
+    - echo "build e deploy do container ok"
+
+deploy_project:
+  stage: deploy
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: ['']
+  script:
+    - kubectl config use-context $KUBE_CONTEXT
+    - kubectl apply -f $CI_PROJECT_DIR/KS8-files/.
+    - kubectl get pods
+    - kubectl get svc
